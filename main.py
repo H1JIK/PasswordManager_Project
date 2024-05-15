@@ -6,6 +6,7 @@ from PasswordManager_main import Ui_PasswordManager
 from add_acc_site_ui import Ui_Add_Acc_Ui
 from add_new_user_ui import Ui_Add_user
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QWidget, QMessageBox
+from PyQt5 import QtGui
 from test_generate_password import Generate
 from check_password import Check_password
 
@@ -14,6 +15,7 @@ class Password_Manager_Main(QMainWindow, Ui_PasswordManager):
     def __init__(self, parent=None):
         global user_id, acc_lst, cur
         super().__init__(parent)
+        self.setWindowIcon(QtGui.QIcon('logo.png'))
         self.setupUi(self)
         self.con = sqlite3.connect('Pass_Manager.db')
         self.cur = self.con.cursor()
@@ -85,6 +87,7 @@ class Add_account_Site(QMainWindow, Ui_Add_Acc_Ui):
     def __init__(self, parent=None):
         global cur
         super().__init__(parent)
+        self.setWindowIcon(QtGui.QIcon('logo.png'))
         self.con = sqlite3.connect('Pass_Manager.db')
         cur = self.con.cursor()
         self.setupUi(self)
@@ -138,6 +141,7 @@ class Login(QMainWindow, Ui_login_w):
     def __init__(self, parent=None):
         global user
         super().__init__(parent)
+        self.setWindowIcon(QtGui.QIcon('logo.png'))
         self.setupUi(self)
         self.con = sqlite3.connect('Pass_Manager.db')
         self.cur = self.con.cursor()
@@ -187,6 +191,7 @@ class Add_new_user(QWidget, Ui_Add_user):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+        self.setWindowIcon(QtGui.QIcon('logo.png'))
         self.con = sqlite3.connect('Pass_Manager.db')
         self.cur = self.con.cursor()
         self.users_lst = self.cur.execute('''SELECT user_name from users''').fetchall()
@@ -223,6 +228,7 @@ def except_hook(cls, exception, traceback):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    app.setStyle('Fusion')
     ex = Login()
     ex.show()
     sys.excepthook = except_hook
