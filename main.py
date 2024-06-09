@@ -5,7 +5,7 @@ from loginw_ui import Ui_login_w
 from PasswordManager_main import Ui_PasswordManager
 from add_acc_site_ui import Ui_Add_Acc_Ui
 from add_new_user_ui import Ui_Add_user
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QWidget, QMessageBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QWidget, QMessageBox, QLineEdit
 from PyQt5 import QtGui
 from test_generate_password import Generate
 from check_password import Check_password
@@ -150,6 +150,13 @@ class Login(QMainWindow, Ui_login_w):
         self.okb_user.clicked.connect(self.open_pass_manager)
         self.add_user.clicked.connect(self.add_new_user_def)
         self.delete_user_button.clicked.connect(self.delete_user)
+        self.btn_show_pwd.clicked.connect(self.toggleVisibility)
+
+    def toggleVisibility(self):
+        if self.passw_input.echoMode() == QLineEdit.Normal:
+            self.passw_input.setEchoMode(QLineEdit.Password)
+        else:
+            self.passw_input.setEchoMode(QLineEdit.Normal)
 
     def load_roll_users(self):
         user.clear()
@@ -157,13 +164,22 @@ class Login(QMainWindow, Ui_login_w):
             [item[0] for item in self.cur.execute("SELECT user_name FROM users").fetchall()])
 
     def open_pass_manager(self):
+        try:
+            user_passw = self.cur.execute(f'''SELECT user_password from users
+                                                   WHERE user_name = "{user.currentText()}"''').fetchone()[0]
+        except Exception:
+            print('Zero_user_error(Just create a user)')
+        self.error_login.setStyleSheet("color: red")
         if user.currentText() == '':
-            self.error_login.setStyleSheet("color: red")
             self.error_login.setText('Выберите или создайте пользователя')
-        else:
+        elif self.passw_input.text() == '':
+            self.error_login.setText('Введите пароль')
+        elif self.passw_input.text() == user_passw:
             self.close()
             self.passmanager = Password_Manager_Main(self)
             self.passmanager.show()
+        else:
+            self.error_login.setText('Вы ввели неверный пароль')
 
     def add_new_user_def(self):
         self.close()
@@ -200,6 +216,7 @@ class Add_new_user(QWidget, Ui_Add_user):
 
     def add_new_user_sql(self):
         res_text = self.input_new_user.text()
+        res_password = self.input_user_password.text()
         flag_new_user_error = False
         for usr_name in self.users_lst:
             if usr_name[0] == res_text:
@@ -209,8 +226,13 @@ class Add_new_user(QWidget, Ui_Add_user):
             self.add_new_user_error.setText('Имя пользователя не должно быть пустым')
         elif flag_new_user_error:
             self.add_new_user_error.setText('Имя пользователя не должно совпадать с ранее созданным')
+        elif res_password == '':
+            self.add_new_user_error.setText('Пароль не должен быть пустым')
+        elif len(res_password) < 8:
+            self.add_new_user_error.setText('Длина пароля не должна быть менее 8 символов')
         else:
-            self.cur.execute(f'''INSERT INTO users (user_name) VALUES('{res_text}')''')
+            self.cur.execute(
+                f'''INSERT OR IGNORE INTO users (user_name, user_password) VALUES('{res_text}', '{res_password}')''')
             self.con.commit()
             self.close()
             self.back_lg = Login(self)
